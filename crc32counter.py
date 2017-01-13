@@ -39,20 +39,28 @@ def crc32_function(path, filename=None):
     :param filename:
     :return:
     """
-    if not filename:
-        print('{0:20} {1:>10} {2:8} {3}'.format('Data', 'Size', 'Checksum', 'File name'))
+    header = ('{0:20} {1:>10} {2:8} {3}', 'Data', 'Size', 'Checksum', 'File name')
+
+    if filename:
+        fileTo = open(filename, 'w')
+        fileTo.write(header[0].format(header[1], header[2], header[3], header[4]+'\n'))
     else:
-        fileTo = open(filename, '')
+        print(header[0].format(header[1], header[2],header[3], header[4]))
     for top, dirs, files in os.walk(path):
-        if not filename: print(top)
+        if filename:
+            fileTo.write(top+'\n')
+        else:
+            print(top)
         for file in files:
             path_to_file = os.path.join(top, file)
             change_time = strftime('%d.%m.%Y %H:%M:%S', gmtime(os.path.getctime(path_to_file)))
             checksum = crc32_count(path_to_file)
             file_size = os.path.getsize(path_to_file)
-            if not filename:
+            if filename:
+                fileTo.write('{0:20} {1:10} {2:8x} {3}'.format(change_time, file_size, checksum, file+'\n'))
+            else:
                 print('{0:20} {1:10} {2:8x} {3}'.format(change_time, file_size, checksum, file))
 
 if __name__ == '__main__':
     path = 'D:\\Test'
-    crc32_function(path)
+    crc32_function(path, 'crc32checksum.txt')
