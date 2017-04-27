@@ -1,5 +1,5 @@
 """
-
+Скрипт для подсчета контрольной суммы файлов по алгоритму CRC32
 """
 import os
 from time import gmtime, strftime
@@ -36,6 +36,7 @@ def crc32_function(path, filename=None, ignore=()):
     header = ('{0:20} {1:>10} {2:8} {3}', 'Data', 'Size', 'Checksum', 'File name')
 
     if filename:
+
         fileTo = open(filename, 'w')
         fileTo.write(header[0].format(header[1], header[2], header[3], header[4]+'\n'))
     else:
@@ -65,6 +66,9 @@ def crc32_function(path, filename=None, ignore=()):
     if filename:
         fileTo.close()
 
+
+
 if __name__ == '__main__':
+    # Тестовый фрагмент
     path = 'D:\\Test'
     crc32_function(path, 'crc32checksum.txt')
