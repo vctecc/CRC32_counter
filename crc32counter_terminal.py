@@ -9,15 +9,21 @@ from tkinter import Button, Tk, Frame, Label, messagebox, filedialog, Entry
 from crc32counter import crc32_function
 import os
 
+
 class Terminal(Tk):
     """
     Этот класс стоит переработать. Отдельно написать GUI, отдельно написать все остальное.
     """
     def __init__(self):
+
+        self.FIRST_FILE = 'crc32'
+        self.TEMP_FILE = 'temp'
+        self.ERR_FILE = 'error'
+
         self.path = ''
         self.root = Tk()
         self.root.title("CRC32 counter")
-        self.ignore = ('crc32', 'temp',)
+        self.ignore = (self.FIRST_FILE, self.TEMP_FILE, self.ERR_FILE)
         self.make_ask_dir(self.root)
         self.make_choice_panel(self.root)
 
@@ -26,15 +32,18 @@ class Terminal(Tk):
     def make_choice_panel(self, master):
         self.choice_panel = Frame(master)
         self.choice_panel.pack(side='top')
+
         Label(self.choice_panel, text='Тип проверки').pack(side='top')
 
         button_panel = Frame(self.choice_panel)
         button_panel.pack()
+
         but_1 = Button(button_panel, text='Первичная проверка',
-                       command=lambda: self.initial_verification(self.path))
+                       command=lambda: self.primary_verification(self.path, self.FIRST_FILE))
         but_1.grid(row=0, column=0)
+
         but_2 = Button(button_panel, text='Вторичная проверка',
-                       command=lambda: self.secondary_verification(self.path, self.ignore))
+                       command=lambda: self.secondary_verification(self.path, self.TEMP_FILE, self.ignore))
         but_2.grid(row=0, column=1)
 
     def make_ask_dir(self, master):
@@ -56,19 +65,23 @@ class Terminal(Tk):
         self.path_entry.insert(0, self.path)
         print(self.path)
 
-    @staticmethod
-    def initial_verification(path):
+    def primary_verification(self, path, outfile):
 
-        crc32_function(path, 'crc32')
+        if self.path:
+            crc32_function(path, outfile)
+            messagebox.showinfo('Good!', 'Контрольная сумма посчитана')
+        else:
+            messagebox.showwarning('Error!', 'Не указан путь')
 
-    def secondary_verification(self, path, ignore):
+    def secondary_verification(self, path, outfile,  ignore):
         """
         Поиск файла с контрольными суммами, вычисление контрольной суммы для всех файлов указанного каталога,
         запись результатов во временный фаил, сравнение (при наличии) с результатми предыдущей проверки.
         При обноружении несоответствий происходит создание файла несоответствий.
         """
-        crc32_function(path, 'temp', ignore)
-        answer = self.compare('crc32', 'temp')
+        crc32_function(path, outfile, ignore)
+
+        answer = self.compare(self.FIRST_FILE, 'temp')
         if not answer:
             messagebox.showwarning('Bad!', 'Контрольные суммы не совпадают')
         elif answer == 'error':
@@ -108,11 +121,23 @@ class Terminal(Tk):
 
             if len(data_f) != len(data_s):
                 error.write(data_s)
+            else:
+                for symbol in range(len(data_f)):
+                    if data_f[symbol] != data_s[symbol]:
+                        error.write(data_s)
+                        break
 
-
-        error.close()
         first.close()
         second.close()
+        error.close()
+
+        os.remove(second_name)
+
+        if os.path.getsize('error') == 0:
+            os.remove('error')
+        else:
+            answer = False
+
         return answer
 
 if __name__ == '__main__':
